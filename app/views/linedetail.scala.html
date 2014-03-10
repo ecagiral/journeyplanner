@@ -1,0 +1,107 @@
+@(line: LineData,nodes:List[NodeData],editLineForm:Form[(Long,String,Int,Int)],addEdgeForm:Form[(Long,Long,Long,Int,Int)])
+@import helper._
+@main("Line detail") {
+    @header("")
+	
+	<div>
+    	<div style="float:left;margin:20px;width:400px;height:400px" id="map-canvas"></div>
+	    <div style="float:left;margin:20px">
+	    <h4>Edit Line</h4>
+	    @form(routes.Provision.editLine) {
+        	<input type="hidden" name="id" id="id" value="@line.id">
+		    @inputText(editLineForm("label")) 
+		    @inputText(editLineForm("period"))
+		    @inputText(editLineForm("lineType"))
+		    <input type="submit" value="Save">  
+       	}
+	    @form(routes.Provision.deleteLine(line.id)) {
+        	<input type="submit" value="Delete Line">
+       	}
+       	<h4>Nodes:</h4>
+	    <ul>
+	        @line.getEdgeData.map { edgeData => 
+	            <li>
+	                <a href='/edgeDetail/@edgeData.id'>@NodeData.findById(edgeData.sourceNode).get.label -> @NodeData.findById(edgeData.targetNode).get.label 
+	                @edgeData.distance metres @edgeData.duration minutes</a>	                
+	            </li>
+	        }
+	    </ul>
+	    </div>
+	    <div style="float:left;margin:20px;">
+	    <h4>Add a new line edge</h4>
+	    
+	    @form(routes.Provision.addEdge) {
+	        
+	        @input(addEdgeForm("sourceNode")) { (id, name, value, args) =>
+		        <select name="@name" id="@id" @toHtmlArgs(args)>
+		        	@nodes.map { node =>
+				  <option value="@node.id">@node.label</option>
+				  }
+				</select>
+			}
+			@input(addEdgeForm("targetNode")) { (id, name, value, args) =>
+		        <select name="@name" id="@id" @toHtmlArgs(args)>
+		        	@nodes.map { node =>
+				  <option value="@node.id">@node.label</option>
+				  }
+				</select>
+			}
+			@inputText(addEdgeForm("distance"))    
+			@inputText(addEdgeForm("duration"))     
+	    	<input type="hidden" name="line" id="line" value="@line.id">
+	
+	        <input type="submit" value="Add">
+	        
+	    }
+	    </div>
+    </div>
+    <script>
+		function initialize() {
+		  var myLatlng = new google.maps.LatLng(41.023557,29.002018);
+		  var mapOptions = {
+		    zoom: 12,
+		    center: myLatlng
+		  }
+		  var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+		  
+		  google.maps.event.addListener(map, "rightclick", function(event) {
+		      var lat = event.latLng.lat();
+		      var lng = event.latLng.lng();
+		      $.ajax({
+		          type : 'GET',
+		          contentType:'text/plain',
+		          url : '/findNearestNode',
+		          data : {
+		              'lat': lat,'lng': lng
+		          },
+		          success : function(data) {
+		        	  alert("durak: "+data.durak+" uzaklik "+data.uzaklik);
+		          }
+		      });
+		      
+		  });
+		  var bounds = new google.maps.LatLngBounds();
+	        @line.getEdgeData.map{ edgeData =>
+	        	var fromCorr = new google.maps.LatLng(@NodeData.findById(edgeData.sourceNode).get.lat, @NodeData.findById(edgeData.sourceNode).get.lng);
+	        	var toCorr = new google.maps.LatLng(@NodeData.findById(edgeData.targetNode).get.lat, @NodeData.findById(edgeData.targetNode).get.lng);
+
+        		var routeCoordinates = [
+                	fromCorr, toCorr
+              	];  
+        		bounds.extend(toCorr);
+        		bounds.extend(fromCorr);
+        		var routePath = new google.maps.Polyline({
+                	path: routeCoordinates,
+                	geodesic: true,
+               		strokeColor: '#FF0000',
+                	strokeOpacity: 1.0,
+                	strokeWeight: 4
+              	});              
+        		routePath.setMap(map)
+	  		} 
+	        map.fitBounds(bounds);
+    	}		
+		google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+
+}

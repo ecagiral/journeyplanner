@@ -1,0 +1,36 @@
+@(lines: List[LineData], lineForm: Form[(String,Int,Int)])
+@import helper._
+@main("Welcome") {
+ 	@header("") 
+ 	<div style="float:left;margin:20px;width:200px">  
+	<h4>Lines (@lines.size)</h4>    
+    <ul>
+        @lines.map { line =>
+            <li>
+                <a href="@routes.Provision.lineDetail(line.id)">@line.label</a>
+            </li>
+        }
+    </ul>
+    </div>
+    <div style="float:left;margin:20px;">
+    <h4>Add a new line</h4>
+    
+    @form(routes.Provision.addLine) {
+        
+        @inputText(lineForm("label"))
+        @inputText(lineForm("period"))  
+        @input(lineForm("lineType")) { (id, name, value, args) =>
+	        <select name="@name" id="@id" @toHtmlArgs(args)>
+			  <option value="1">otobus</option>
+			  <option value="2">minibus</option>
+			  <option value="3">vapur</option>
+			  <option value="4">metro</option>
+			  <option value="5">metrobus</option>
+			</select>
+		} 
+        <input type="submit" value="Create">
+        
+    }
+    </div>
+
+}

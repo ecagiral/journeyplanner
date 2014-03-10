@@ -1,0 +1,22 @@
+#header{
+	border-bottom:2px solid black;
+	height:40px
+}
+#header ul li{
+	display: inline-block;
+	margin:10px;
+}
+
+.deletableObjectList li{
+	width:500px;
+	height:30px;
+}
+
+.deletableObjectList li form{
+	float:right;
+	display:none;
+}
+
+.deletableObjectList li:hover form{
+	display:inline;
+}

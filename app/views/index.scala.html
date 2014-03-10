@@ -1,0 +1,150 @@
+
+@main("Istanbul") {
+@header("")
+	<div style="width:700px;height:400px" id="map-canvas"></div>
+	<div>
+		routes
+		<div id="routeBtnDiv">
+		</div>
+	</div>
+    <script>
+    	var toMarker;
+    	var fromMarker;
+    	var map;
+    	var routes;
+    	var routePaths = [];
+		function initialize() {
+		  var myLatlng = new google.maps.LatLng(41.023557,29.002018);
+		  var mapOptions = {
+		    zoom: 12,
+		    center: myLatlng
+		  }
+		  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+		  
+		  google.maps.event.addListener(map, "click", function(event) {
+		      clickEvent(event.latLng)		      
+		  });
+
+        	
+    	}
+
+		var clickEvent = function(latlng){
+			if(fromMarker){
+				if(toMarker){
+					toMarker.setMap(null);
+					toMarker=null;
+					fromMarker.setMap(null);
+					fromMarker=null;
+					fromMarker = new google.maps.Marker({
+						position: latlng,
+						map: map,
+						title: 'from'
+					});
+					
+				}else{
+					toMarker = new google.maps.Marker({
+						position: latlng,
+						map: map,
+						title: 'to'
+					});
+					findPath();
+					
+				}
+			}else{
+				fromMarker = new google.maps.Marker({
+					position: latlng,
+					map: map,
+					title: 'from'
+				});
+			}
+			
+		}
+		
+		var drawRoute = function(data){
+			for (var i = 0; i < routePaths.length; i++ ) {
+				routePaths[i].setMap(null);
+			  }
+			routePaths = [];
+			var startData = {};
+			startData.line = data[0].line;
+			startData.lat = fromMarker.getPosition().lat();
+			startData.lng = fromMarker.getPosition().lng();
+			data.unshift(startData);
+			var endData = {};
+			endData.line = data[0].line;
+			endData.lat = toMarker.getPosition().lat();
+			endData.lng = toMarker.getPosition().lng();
+			data.push(endData);
+        	var flightPlanCoordinates = [];
+        	var line = data[0].line;
+        	var lineId = 0;
+        	var colors = ['blue','red','green','black'];
+			for (var i = 0; i < data.length; i++) {
+				if(line === data[i].line){
+	             	var newPoint = new google.maps.LatLng(data[i].lat, data[i].lng);
+	             	flightPlanCoordinates.push(newPoint);
+				}else{
+					var routePath = new google.maps.Polyline({
+			              path: flightPlanCoordinates,
+			              geodesic: true,
+			              strokeColor: colors[lineId],
+			              strokeOpacity: 1.0,
+			              strokeWeight: 4
+			        });
+			     	routePath.setMap(map);
+			     	routePaths.push(routePath);
+			     	flightPlanCoordinates = [];
+	             	var newPoint = new google.maps.LatLng(data[i-1].lat, data[i-1].lng);
+	             	flightPlanCoordinates.push(newPoint);
+	             	var newPoint = new google.maps.LatLng(data[i].lat, data[i].lng);
+	             	flightPlanCoordinates.push(newPoint);
+	             	line = data[i].line;
+			     	lineId++;
+				}
+			}
+			var routePath = new google.maps.Polyline({
+	              path: flightPlanCoordinates,
+	              geodesic: true,
+	              strokeColor: colors[lineId],
+	              strokeOpacity: 1.0,
+	              strokeWeight: 2
+	        });
+	     	routePath.setMap(map);
+	     	routePaths.push(routePath);
+		}
+		
+		var findPath = function(){
+			console.log("find path");
+		    $.ajax({
+		    	type : 'GET',
+		    	contentType:'text/plain',
+		    	url : '/findPath',
+		    	data : {
+		        	'fromLat': fromMarker.getPosition().lat(),'fromLng': fromMarker.getPosition().lng(),'toLat': toMarker.getPosition().lat(),'toLng': toMarker.getPosition().lng()
+		       	},
+		        success : function(data) {
+		        	routes = data;
+		        	$("#routeBtnDiv").empty();
+		        	for(var i = 0; i < data.length; i++) {
+		        		var routeDetail = "";
+		        		for(var ei = 0; ei < data[i].length; ei++){
+		        			routeDetail = routeDetail+" -> "+data[i][ei].target.id+" "+data[i][ei].target.label+" ("+data[i][ei].line.label+") ";
+		        		}
+			        	$("#routeBtnDiv").append("<br/><br/><div style='margin-left:20px;display:inline;cursor:pointer' data-route='"+i+"'>"+routeDetail+"</div>");	
+		        	}
+		        	$("#routeBtnDiv div").on('click',function(){
+		        		drawRoute(routes[$(this).data("route")]);
+		        	})
+		        	if(routes[0]){
+		        		//drawRoute(routes[0]);
+		        	}else{
+		        		alert("rota bulunamadi");
+		        	}
+		        }
+		    });
+		}
+		
+		google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+    
+}

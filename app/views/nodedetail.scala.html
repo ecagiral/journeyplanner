@@ -1,0 +1,64 @@
+@(node:NodeData,lines:List[LineData],editNodeForm:Form[(Long,String,String,String)])
+@import helper._
+@main("Node detail") {
+	@header("")
+	<div style="margin:20px;">
+	    <div style="float:left;width:400px;height:400px" id="map-canvas"></div>
+	    <div style="float:left;margin-left:20px;">
+	        @form(routes.Provision.editNode) {
+				<input type="hidden" name="id" id="id" value="@node.id">
+		        @inputText(editNodeForm("label")) 
+		        @inputText(editNodeForm("lat"))
+		        @inputText(editNodeForm("lng"))
+		        <input type="submit" value="Save">    
+	    	}
+	    	@form(routes.Provision.deleteNode(node.id)) {
+            	<input type="submit" value="Delete">
+            }
+	    </div>
+	    <div style="float:left;margin-left:20px;">
+	    	<h4>Lines</h4>
+		    <ul>
+		    @lines.map { line =>
+	            <li>
+	                <a href="@routes.Provision.lineDetail(line.id)">@line.label</a>
+	            </li>
+	        }
+	        </ul>
+        </div>
+    </div>
+    <script>
+    	var marker;
+		function initialize() {
+		  var myLatlng = new google.maps.LatLng(@node.lat,@node.lng);
+		  var mapOptions = {
+		    zoom: 12,
+		    center: myLatlng
+		  }
+		  var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+		  
+		  marker = new google.maps.Marker({
+		      position: new google.maps.LatLng(@node.lat,@node.lng),
+		      map: map
+		  });
+		  
+		  google.maps.event.addListener(map, "click", function(event) {
+		      var lat = event.latLng.lat();
+		      var lng = event.latLng.lng();
+		      lat = Math.round(lat*10000)/10000;
+		      lng = Math.round(lng*10000)/10000
+			  marker.setMap(null);
+			  $("#lat").val(lat);
+			  $("#lng").val(lng);
+			  marker = new google.maps.Marker({
+			      position: new google.maps.LatLng(lat,lng),
+			      map: map
+			  });
+		      
+		  });
+		  
+    	}		
+		google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+
+}

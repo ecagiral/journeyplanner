@@ -1,0 +1,33 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                           controllers.Application.index
+
+GET     /lines                  	controllers.Provision.lines
+POST    /lines                  	controllers.Provision.addLine
+POST    /lines/:id/delete       	controllers.Provision.deleteLine(id: Long)
+GET     /linedetail/:id             controllers.Provision.lineDetail(id: Long)
+POST    /editLine                 	controllers.Provision.editLine
+
+GET     /nodes                  	controllers.Provision.nodes
+POST    /nodes                  	controllers.Provision.addNode
+POST    /editNode                  	controllers.Provision.editNode
+GET     /nodes/:id/delete       	controllers.Provision.deleteNode(id: Long)
+GET     /nodedetail/:id            	controllers.Provision.nodeDetail(id: Long)
+
+GET     /edgeDetail/:id		 		controllers.Provision.edgeDetail(id: Long)
+POST    /editEdge               	controllers.Provision.editEdge
+POST    /addEdge                	controllers.Provision.addEdge
+POST    /deleteEdge/:id/delete 		controllers.Provision.deleteEdge(id: Long)
+
+GET 	/parse						controllers.Import.parseLinePage
+POST 	/parse						controllers.Import.parseLineData
+
+GET 	/findNearestNode			controllers.Application.findNearestNode(lat:Double,lng:Double)
+GET 	/findPath					controllers.Application.findPath(fromLat:Double,fromLng:Double,toLat:Double,toLng:Double)
+
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)

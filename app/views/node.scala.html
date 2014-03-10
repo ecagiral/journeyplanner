@@ -1,0 +1,83 @@
+@(nodes: List[NodeData], nodeForm: Form[(String,String,String)])
+@import helper._
+@main("Nodes") {
+    @header("")
+    <span style="color:red">@nodeForm.errors.mkString("-")</span>
+	<div style="float:left;margin:20px;width:400px;height:400px" id="map-canvas"></div>
+	<div style="float:left;margin:20px;width:200px;">
+	@nodes.map { node =>
+       <li>
+           <a href="@routes.Provision.nodeDetail(node.id)">@node.label</a>
+       </li>
+    }
+    </div>
+    <div style="float:left;margin:20px;">
+    <h4>Add a new node</h4>
+    
+    @form(routes.Provision.addNode) {
+        
+        @inputText(nodeForm("label")) 
+        @inputText(nodeForm("lat"))
+        @inputText(nodeForm("lng"))
+        <input type="submit" value="Create">
+        
+    }
+    </div>
+    <script>
+    	var map;
+    	var markerArray = [];
+		function initialize() {
+		  var myLatlng = new google.maps.LatLng(41.023557,29.002018);
+		  var mapOptions = {
+		    zoom: 12,
+		    center: myLatlng
+		  }
+		  map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+		  
+		  google.maps.event.addListener(map, "click", function(event) {
+		      var lat = event.latLng.lat();
+		      var lng = event.latLng.lng();
+		      $.ajax({
+		          type : 'GET',
+		          contentType:'text/plain',
+		          url : '/findNearestNode',
+		          data : {
+		              'lat': lat,'lng': lng
+		          },
+		          success : function(data) {
+		        	drawNodes(data);
+		          }
+		      });
+		      
+		  });
+		}
+		
+		var drawNodes = function(data){
+			if(!data || data.length == 0){
+				alert("no node found");
+			}
+			
+			for (var i = 0; i < markerArray.length; i++) {
+				markerArray[i].setMap(null);
+			}
+			markerArray = [];
+			$('#nodeList').empty();
+			for (var i = 0; i < data.length; i++) {			  
+			  var marker = new google.maps.Marker({
+			      position: new google.maps.LatLng(data[i].lat,data[i].lng),
+			      map: map,
+			      title: data[i].label,
+			      nodeId:data[i].id
+			  });
+			  google.maps.event.addListener(marker, 'click', function() {
+				  window.location = "/nodedetail/"+this.nodeId;
+			  });
+			  markerArray.push(marker);
+			  //$('#nodeList').append("<li>"+data[i].label+"<a href='/nodedetail/"+data[i].id+"'>Edit</a></li>");
+			}
+		}
+	
+	google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+  
+}

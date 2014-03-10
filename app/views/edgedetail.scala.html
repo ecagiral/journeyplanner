@@ -1,0 +1,48 @@
+@(edge:EdgeData,line:LineData,source:NodeData,target:NodeData,editEdgeForm:Form[(Long,Int,Int)])
+@import helper._
+@main("Edge detail") {
+	@header("")
+	<div style="margin:20px;">
+	    <div style="float:left;width:400px;height:400px" id="map-canvas"></div>
+	    <div style="float:left;margin-left:20px;">
+	    	<strong>@source.label</strong> -> <strong>@target.label</strong> via <strong>@line.label</strong>
+	    	</br>
+	    	</br>
+	        @form(routes.Provision.editEdge) {
+				<input type="hidden" name="id" id="id" value="@edge.id">
+		        @inputText(editEdgeForm("distance")) 
+		        @inputText(editEdgeForm("duration"))
+		        <input type="submit" value="Save">    
+	    	}
+	    	@form(routes.Provision.deleteEdge(edge.id)) {
+            	<input type="submit" value="Delete">
+            }
+	    </div>
+	    
+    </div>
+    <script>
+		function initialize() {
+			var bounds = new google.maps.LatLngBounds();			
+		  	var sourceLatlng = new google.maps.LatLng(@source.lat,@source.lng);
+			bounds.extend(sourceLatlng);
+			var targetLatlng = new google.maps.LatLng(@target.lat,@target.lng);
+			bounds.extend(targetLatlng);
+			var map = new google.maps.Map(document.getElementById('map-canvas'));
+			map.fitBounds(bounds);
+			var sourcemarker = new google.maps.Marker({
+		   		position: new google.maps.LatLng(@source.lat,@source.lng),
+		    	map: map,
+		    	title:"@source.label"
+			});
+		  
+		  var targetmarker = new google.maps.Marker({
+		      position: new google.maps.LatLng(@target.lat,@target.lng),
+		      map: map,
+		      title:"@target.label"
+		  });
+		  
+    	}		
+		google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+
+}

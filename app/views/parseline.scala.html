@@ -1,0 +1,25 @@
+@(lineParserForm: Form[(String,String)], result:List[NodeData])
+@import helper._
+@main("Parse Line") {
+    @header("")
+    <span style="color:red">@lineParserForm.errors.mkString("-")</span>
+    
+    <h2>Parse a new line</h2>
+    
+    @form(routes.Import.parseLineData) {
+        
+        @inputText(lineParserForm("label")) 
+        @inputText(lineParserForm("url"))
+        <input type="submit" value="Parse">
+        
+    }
+    
+    <h2>Result</h2>
+        @result.map { node =>
+            <li>
+                @node.label ->  ( @node.lat ,  @node.lng)
+
+            </li>
+        }
+  
+}
