@@ -32,39 +32,6 @@ case class LineData(id:Long,label:String,period:Int,lineType:Int){
         EdgeData.findByLine(id) 
     }
     
-    def getIntersect (another:Long): Option[(Long,Long,Int)]={
-        var result:Option[(Long,Long,Int)] = None
-        if(id==another){
-          return None
-        }
-        for(edge_a <- EdgeData.getNodes(id);edge_b <- EdgeData.getNodes(another)){
-          EdgeData.getWalkDistance(edge_a, edge_b) match {
-                case Some(newDistance) => 
-                  if(newDistance <= result.getOrElse((0,0,newDistance))._3){
-                    result = Some((edge_a.id,edge_b.id,newDistance))
-                  }
-                case None => //do nothing
-            }  
-        }
-        result        
-    }
-    
-    def getIntersect2 (another:Long): Boolean={
-        var result:Option[(Long,Long,Int)] = None
-        if(id==another){
-          false
-        }else{
-          var result = false
-          for(edge_a <- EdgeData.getNodes(id);edge_b <- EdgeData.getNodes(another)){
-             if(edge_a.id == edge_b.id){
-               result = true
-             }  
-          }
-          result
-        }
-             
-    }
-    
     def update(label: String,period:Int,lineType:Int) {
         DB.withConnection { implicit c =>
             SQL("update lines set (label,period,lineType) = ({label},{period},{lineType}) where id = {id}").on(

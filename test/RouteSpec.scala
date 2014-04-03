@@ -15,7 +15,7 @@ class RouteSpec extends Specification{
               "db.default.password" -> "12345"
    ))
    
-    "EdgeCrossData" should {
+    "RouteUtil" should {
       "find routes without walk" in {
       running (fakeAppwithTestDB){
             DB.withConnection { implicit c =>
@@ -64,22 +64,22 @@ class RouteSpec extends Specification{
           val node4E = NodeData.create("node4E", 40.903, 28.903).get
           val node5E = NodeData.create("node5E", 40.999, 28.999).get
           
-          val edgeC1_1 = EdgeData.addEdge(line1, node1S, node1E, 5, 5).get
-          val edgeC2_1 = EdgeData.addEdge(line2, node2S, node21, 5, 5).get
-          val edgeC2_2 = EdgeData.addEdge(line2, node21, node2E, 5, 5).get
-          val edgeC3_1 = EdgeData.addEdge(line3, node3S, node31, 5, 5).get
-          val edgeC3_2 = EdgeData.addEdge(line4, node31, node3E, 5, 5).get
-          val edgeC4_1 = EdgeData.addEdge(line5, node4S, node41, 5, 5).get
-          val edgeC4_2 = EdgeData.addEdge(line5, node41, node42, 5, 5).get
-          val edgeC4_3 = EdgeData.addEdge(line5, node42, node4E, 5, 5).get
-          val edgeC4_4 = EdgeData.addEdge(line6, node4S, node41, 5, 5).get
-          val edgeC4_5 = EdgeData.addEdge(line6, node41, node42, 5, 5).get
-          val edgeC4_6 = EdgeData.addEdge(line6, node42, node4E, 5, 5).get
-          val edgeC7_1 = EdgeData.addEdge(line7, node5S, node5E, 5, 5).get
+          val edgeC1_1 = EdgeData.create(line1, node1S, node1E, 5, 5).get
+          val edgeC2_1 = EdgeData.create(line2, node2S, node21, 5, 5).get
+          val edgeC2_2 = EdgeData.create(line2, node21, node2E, 5, 5).get
+          val edgeC3_1 = EdgeData.create(line3, node3S, node31, 5, 5).get
+          val edgeC3_2 = EdgeData.create(line4, node31, node3E, 5, 5).get
+          val edgeC4_1 = EdgeData.create(line5, node4S, node41, 5, 5).get
+          val edgeC4_2 = EdgeData.create(line5, node41, node42, 5, 5).get
+          val edgeC4_3 = EdgeData.create(line5, node42, node4E, 5, 5).get
+          val edgeC4_4 = EdgeData.create(line6, node4S, node41, 5, 5).get
+          val edgeC4_5 = EdgeData.create(line6, node41, node42, 5, 5).get
+          val edgeC4_6 = EdgeData.create(line6, node42, node4E, 5, 5).get
+          val edgeC7_1 = EdgeData.create(line7, node5S, node5E, 5, 5).get
           
           val res = RouteUtil.solveRoute(40.00, 28.00,40.90, 28.90)
-          res.foreach(route=>println("route json = "+route.toJson.toString))
-          res.size must be_==(9)           
+          //res.foreach(route=>println("route : "+route.toString))
+          res.size must be_==(7)           
           
       }
     }

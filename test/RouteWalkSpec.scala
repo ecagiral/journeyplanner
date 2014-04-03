@@ -34,8 +34,8 @@ class RouteWalkSpec extends Specification{
           val node3 = NodeData.create("node3", 40.011, 28.011).get
           val node4 = NodeData.create("node4", 40.900, 28.900).get
           
-          val edge1 = EdgeData.addEdge(line1, node1, node2, 5, 5).get
-          val edge2 = EdgeData.addEdge(line2, node3, node4, 5, 5).get
+          val edge1 = EdgeData.create(line1, node1, node2, 5, 5).get
+          val edge2 = EdgeData.create(line2, node3, node4, 5, 5).get
           
           val res = RouteUtil.solveRoute(40.00, 28.00,40.90, 28.90)
           res.size must be_==(1)           

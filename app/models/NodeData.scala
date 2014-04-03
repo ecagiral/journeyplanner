@@ -46,18 +46,6 @@ object NodeData {
         ).as(node.singleOpt)     
     }
     
-    def findNearest(lat:Double,lng:Double):List[(Long,String,Long)] = DB.withConnection{ implicit c =>
-        SQL("select id,label,distance::bigint from (select id,label,(1609*SQRT(POW(69.1 * (lat - {lat}), 2) + POW(69.1 * ({lng} - lng) * COS(lat / 57.3), 2))) as distance FROM nodes) as subq ORDER BY distance asc limit 1").on(
-           'lat -> lat,
-           'lng -> lng
-        ).parse( 
-            long("id") ~ str("label") ~ long("distance") map{
-              case id~label~dist => (id,label,dist)
-            }*
-        )  
-        
-    }
-    
     def findNear(lat:Double,lng:Double,distance:Integer):List[(Long,String,Long)] = DB.withConnection{ implicit c =>
         SQL("select distinct on (id) id,label,distance::bigint from (select id,label,(1609*SQRT(POW(69.1 * (lat - {lat}), 2) + POW(69.1 * ({lng} - lng) * COS(lat / 57.3), 2))) as distance FROM nodes) as subq where distance < {distance}  ").on(
            'lat -> lat,

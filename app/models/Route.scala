@@ -6,16 +6,17 @@ class Route(edges: List[EdgeData], targets: List[EdgeData], walkId:Long) {
 
   val targetReached = if (targets.find(_.id == edges.last.id).isDefined) true else false
 
-  val duration = edges.foldLeft((0, 0L))((time_line, edge) =>
+  def duration = edges.foldLeft((0, 0L))((time_line, edge) =>
     if (time_line._2 != edge.line) {
       //line changed
-      (time_line._1 + edge.duration + 20, edge.line)
+      (time_line._1 + edge.duration + LineData.findById(edge.line).map{_.period}.
+          getOrElse(0), edge.line)
     } else {
       (time_line._1 + edge.duration, edge.line)
     })._1
 
   def lines: List[Long] = edges.foldLeft(List[Long]()) {
-    (lines, edge) => if (lines.contains(edge.line)) lines else lines :+ edge.line
+    (lines, edge) => if (lines.contains(edge.line) || edge.line == walkId) lines else lines :+ edge.line
   }
 
   def lastEdge: EdgeData = edges.last
@@ -59,7 +60,7 @@ class Route(edges: List[EdgeData], targets: List[EdgeData], walkId:Long) {
         val sourceNode=NodeData.findById(edge.sourceNode).getOrElse(NodeData.dummy(0))
         val targetNode = NodeData.findById(edge.targetNode).getOrElse(NodeData.dummy(0))
         sourceNode.label+" "+line.label+" "+targetNode.label
-    }.mkString("-->")
+    }.mkString("","-->"," "+duration+" mins")
   }
   
   def toJson = {
@@ -72,6 +73,7 @@ class Route(edges: List[EdgeData], targets: List[EdgeData], walkId:Long) {
            val lineJson = Json.obj("label" -> line.label)
            Json.obj("source" -> sourceJson,"target" -> targetJson, "line" -> lineJson)
        }
-       Json.toJson(jsonRouteSeq)
+       val finalJson = Json.obj("edges"->jsonRouteSeq,"duration"->duration)
+       Json.toJson(finalJson)
   }
 }

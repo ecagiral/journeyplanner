@@ -41,11 +41,11 @@ class LineSpec extends Specification{
           val node8 = NodeData.create("node8", 40.301, 28.301).get
           val node9 = NodeData.create("node9", 40.350, 28.350).get
           
-          val edge1 = EdgeData.addEdge(line1, node1, node2, 5, 5).get
-          val edge2 = EdgeData.addEdge(line2, node3, node4, 5, 5).get
-          val edge3 = EdgeData.addEdge(line3, node4, node5, 5, 5).get
-          val edge4 = EdgeData.addEdge(line4, node6, node7, 5, 5).get
-          val edge5 = EdgeData.addEdge(line5, node8, node9, 5, 5).get
+          val edge1 = EdgeData.create(line1, node1, node2, 5, 5).get
+          val edge2 = EdgeData.create(line2, node3, node4, 5, 5).get
+          val edge3 = EdgeData.create(line3, node4, node5, 5, 5).get
+          val edge4 = EdgeData.create(line4, node6, node7, 5, 5).get
+          val edge5 = EdgeData.create(line5, node8, node9, 5, 5).get
           
           val res = LineCrossData.getCrossData
           

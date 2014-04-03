@@ -171,12 +171,12 @@ class ApplicationSpec extends Specification {
           val node4 = NodeData.create("node4", 40.007, 28.007).get
           val node5 = NodeData.create("node5", 40.010, 28.010).get
           
-          val edge1 = EdgeData.addEdge(line1, node1, node2, 5, 5)
-          val edge2 = EdgeData.addEdge(line1, node2, node3, 5, 5)
-          val edge3 = EdgeData.addEdge(line2, node2, node3, 5, 5)
-          val edge4 = EdgeData.addEdge(line2, node3, node4, 5, 5)
-          val edge5 = EdgeData.addEdge(line3, node3, node4, 5, 5)
-          val edge6 = EdgeData.addEdge(line3, node4, node5, 5, 5)
+          val edge1 = EdgeData.create(line1, node1, node2, 5, 5)
+          val edge2 = EdgeData.create(line1, node2, node3, 5, 5)
+          val edge3 = EdgeData.create(line2, node2, node3, 5, 5)
+          val edge4 = EdgeData.create(line2, node3, node4, 5, 5)
+          val edge5 = EdgeData.create(line3, node3, node4, 5, 5)
+          val edge6 = EdgeData.create(line3, node4, node5, 5, 5)
           
           val start_edges = EdgeData.findNearStartEdges(40.000, 28.000).sortBy(_._2)          
           start_edges.size must be_==(5)

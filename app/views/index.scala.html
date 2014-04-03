@@ -13,6 +13,7 @@
     	var map;
     	var routes;
     	var routePaths = [];
+    	var routeMarkers = [];
 		function initialize() {
 		  var myLatlng = new google.maps.LatLng(41.023557,29.002018);
 		  var mapOptions = {
@@ -60,28 +61,42 @@
 			
 		}
 		
-		var drawRoute = function(data){
+		var clearMap = function(){
 			for (var i = 0; i < routePaths.length; i++ ) {
 				routePaths[i].setMap(null);
-			  }
+			}
 			routePaths = [];
-			var startData = {};
-			startData.line = data[0].line;
-			startData.lat = fromMarker.getPosition().lat();
-			startData.lng = fromMarker.getPosition().lng();
-			data.unshift(startData);
-			var endData = {};
-			endData.line = data[0].line;
-			endData.lat = toMarker.getPosition().lat();
-			endData.lng = toMarker.getPosition().lng();
-			data.push(endData);
+			for (var i = 0; i < routeMarkers.length; i++ ) {
+				routeMarkers[i].setMap(null);
+			}
+			routeMarkers = [];
+		}
+		
+		var drawRoute = function(route){
+			clearMap();
         	var flightPlanCoordinates = [];
-        	var line = data[0].line;
+         	var newPoint = new google.maps.LatLng(route[0].source.lat, route[0].source.lng);
+			var newMarker = new google.maps.Marker({
+				position: newPoint,
+				map: map,
+				title: route[0].source.label
+			});
+			routeMarkers.push(newMarker);
+        	flightPlanCoordinates.push(newPoint);
+        	var line = route[0].line.label;
         	var lineId = 0;
         	var colors = ['blue','red','green','black'];
-			for (var i = 0; i < data.length; i++) {
-				if(line === data[i].line){
-	             	var newPoint = new google.maps.LatLng(data[i].lat, data[i].lng);
+        	 
+    		for(var edgeIndex = 0; edgeIndex < route.length; edgeIndex++){
+    			
+    			if(line === route[edgeIndex].line.label){					
+	             	var newPoint = new google.maps.LatLng(route[edgeIndex].target.lat, route[edgeIndex].target.lng);
+	    			var newMarker = new google.maps.Marker({
+	    				position: newPoint,
+	    				map: map,
+	    				title: route[edgeIndex].target.label
+	    			});
+	    			routeMarkers.push(newMarker);
 	             	flightPlanCoordinates.push(newPoint);
 				}else{
 					var routePath = new google.maps.Polyline({
@@ -94,20 +109,26 @@
 			     	routePath.setMap(map);
 			     	routePaths.push(routePath);
 			     	flightPlanCoordinates = [];
-	             	var newPoint = new google.maps.LatLng(data[i-1].lat, data[i-1].lng);
+	             	flightPlanCoordinates.push(new google.maps.LatLng(route[edgeIndex].source.lat, route[edgeIndex].source.lng));
+	             	var newPoint = new google.maps.LatLng(route[edgeIndex].target.lat, route[edgeIndex].target.lng);
 	             	flightPlanCoordinates.push(newPoint);
-	             	var newPoint = new google.maps.LatLng(data[i].lat, data[i].lng);
-	             	flightPlanCoordinates.push(newPoint);
-	             	line = data[i].line;
+	    			var newMarker = new google.maps.Marker({
+	    				position: newPoint,
+	    				map: map,
+	    				title: route[edgeIndex].target.label
+	    			});
+	    			routeMarkers.push(newMarker);
+	             	line = route[edgeIndex].line.label;
 			     	lineId++;
 				}
-			}
+    		} 
+
 			var routePath = new google.maps.Polyline({
 	              path: flightPlanCoordinates,
 	              geodesic: true,
 	              strokeColor: colors[lineId],
 	              strokeOpacity: 1.0,
-	              strokeWeight: 2
+	              strokeWeight: 4
 	        });
 	     	routePath.setMap(map);
 	     	routePaths.push(routePath);
@@ -127,17 +148,23 @@
 		        	$("#routeBtnDiv").empty();
 		        	for(var i = 0; i < data.length; i++) {
 		        		var routeDetail = "";
-		        		for(var ei = 0; ei < data[i].length; ei++){
-		        			routeDetail = routeDetail+" -> "+data[i][ei].target.id+" "+data[i][ei].target.label+" ("+data[i][ei].line.label+") ";
+		        		var line = "";
+		        		for(var ei = 0; ei < routes[i].edges.length; ei++){
+		        			if(line != routes[i].edges[ei].line.label){
+			        			routeDetail = routeDetail+" -> "+routes[i].edges[ei].line.label;	
+			        			line = routes[i].edges[ei].line.label;
+		        			}
 		        		}
+		        		routeDetail = routeDetail+" ("+routes[i].duration+"mins)";
 			        	$("#routeBtnDiv").append("<br/><br/><div style='margin-left:20px;display:inline;cursor:pointer' data-route='"+i+"'>"+routeDetail+"</div>");	
 		        	}
 		        	$("#routeBtnDiv div").on('click',function(){
-		        		drawRoute(routes[$(this).data("route")]);
+		        		drawRoute(routes[$(this).data("route")].edges);
 		        	})
 		        	if(routes[0]){
-		        		//drawRoute(routes[0]);
+		        		drawRoute(routes[0].edges);
 		        	}else{
+		        		clearMap();
 		        		alert("rota bulunamadi");
 		        	}
 		        }

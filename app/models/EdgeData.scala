@@ -88,29 +88,6 @@ object EdgeData {
         }
     }
     
-    def getWalkDistance(from:NodeData,to:NodeData):Option[Int] = {
-        DB.withConnection { implicit c =>
-            SQL("select el.distance from edges el join lines li on li.id = el.line where el.sourceNode = {sourceNode} and el.targetNode = {targetNode} and li.linetype = 0 order by el.distance asc limit 1").on(
-                    'sourceNode -> from.id,
-                    'targetNode -> to.id
-            ).as(scalar[Int].singleOpt)
-        }
-    }
-    
-//    def findNearStartEdges(lat:Double,lng:Double):List[(EdgeData,Int)]={
-//      DB.withConnection { implicit c =>
-//        val edge_tDistance = "select edge.*, 1000*sqrt(pow({lat}-node.lat,2)+pow({lng}-node.lng,2)) as tDistance " +
-//                "from edges edge join nodes node on edge.sourceNode = node.id " +
-//                "where node.lat < ({lat}+0.005) and node.lat > ({lat}-0.005) and node.lng < ({lng}+0.005) and node.lng > ({lng}-0.005) and edge.line != {walk}";
-//        val edge_rank = "select *,rank() OVER (PARTITION BY line ORDER BY tDistance,id DESC) from ("+edge_tDistance+") as subq"
-//        SQL("select * from ("+edge_rank+") as subq2 where rank = 1").on(
-//            'lat -> lat,
-//            'lng -> lng,
-//            'walk -> LineData.walk.id
-//        ).as(edgeDistance *)
-//      }
-//    }
-    
     def findNearStartEdges(lat:Double,lng:Double):List[(EdgeData,Int)]={
       DB.withConnection { implicit c =>
         SQL("select edge.*, 1000*sqrt(pow({lat}-node.lat,2)+pow({lng}-node.lng,2)) as tDistance " +
