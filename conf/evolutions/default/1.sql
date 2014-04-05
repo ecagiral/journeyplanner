@@ -2,6 +2,12 @@
  
 # --- !Ups
 
+CREATE TABLE config (
+    confName varchar(255) NOT NULL,
+    confValue varchar(255) NOT NULL,
+    CONSTRAINT config_pkey PRIMARY KEY (confName)
+);
+
 CREATE SEQUENCE line_id_seq;
 CREATE TABLE lines (
     id integer NOT NULL DEFAULT nextval('line_id_seq'),

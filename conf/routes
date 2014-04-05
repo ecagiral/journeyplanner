@@ -22,6 +22,10 @@ POST    /editEdge               	controllers.Provision.editEdge
 POST    /addEdge                	controllers.Provision.addEdge
 POST    /deleteEdge/:id/delete 		controllers.Provision.deleteEdge(id: Long)
 
+GET     /login               		controllers.Provision.login
+POST    /authenticate            	controllers.Provision.authenticate
+GET     /logout         		    controllers.Provision.logout
+
 GET 	/parse						controllers.Import.parseLinePage
 POST 	/parse						controllers.Import.parseLineData
 

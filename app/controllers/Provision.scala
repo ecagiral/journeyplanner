@@ -5,8 +5,51 @@ import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc.Action
 import models._
+import play.api.mvc.RequestHeader
+import play.api.mvc.Results
+import play.api.Logger
+import play.api.mvc.Request
+import play.api.mvc.AnyContent
+import play.api.mvc.Result
+import play.api.mvc.Security
 
-object Provision extends Controller {
+object Provision extends Controller with Secured{
+  
+    // -- Authentication
+
+  val loginForm = Form(
+    single(
+      "password" -> text
+    ) verifying ("Invalid password", result => result match {
+      case (password) => password == Config.getAdminPassword
+    })
+  )
+
+  /**
+   * Login page.
+   */
+  def login = Action { implicit request =>
+    Ok(views.html.provision.login(loginForm))
+  }
+
+  /**
+   * Handle login form submission.
+   */
+  def authenticate = Action { implicit request =>
+    loginForm.bindFromRequest.fold(
+      formWithErrors => BadRequest(views.html.provision.login(formWithErrors)),
+      user => Redirect(routes.Provision.lines).withSession("admin" -> "true")
+    )
+  }
+
+  /**
+   * Logout and clean the session.
+   */
+  def logout = Action {
+    Redirect(routes.Application.index).withNewSession.flashing(
+      "success" -> "You've been logged out"
+    )
+  }
   
     ///////////////
     //Forms
@@ -71,13 +114,13 @@ object Provision extends Controller {
     //Lines
     ///////////////
     
-    def lines = Action {
-        Ok(views.html.line(LineData.all().sortBy(_.label.toLowerCase()), addLineForm))
+    def lines = withAuth { username => implicit request =>
+        Ok(views.html.provision.line(LineData.all().sortBy(_.label.toLowerCase()), addLineForm))
     }
   
-    def addLine = Action { implicit request =>
+    def addLine = withAuth { username => implicit request =>
         addLineForm.bindFromRequest.fold(
-            errors => BadRequest(views.html.line(LineData.all().sortBy(_.label.toLowerCase()), errors)),
+            errors => BadRequest(views.html.provision.line(LineData.all().sortBy(_.label.toLowerCase()), errors)),
         {
           case(label,period,lineType)=>{              
               LineData.create(label,period,lineType)
@@ -87,13 +130,13 @@ object Provision extends Controller {
       )
     }
     
-    def editLine = Action { implicit request =>
+    def editLine = withAuth { username => implicit request =>
         editLineForm.bindFromRequest.fold(
             errors => {
               LineData.findById(errors.get._1).map{
                 line =>
                     val form = editLineForm
-                    BadRequest(views.html.linedetail(line, NodeData.all.sortBy(_.label.toLowerCase()), errors,addEdgeForm))
+                    BadRequest(views.html.provision.linedetail(line, NodeData.all.sortBy(_.label.toLowerCase()), errors,addEdgeForm))
               }.getOrElse(Redirect(routes.Provision.lines))
               
             },
@@ -103,7 +146,7 @@ object Provision extends Controller {
                     line => 
                       line.update(label, period, lineType)
                       val form = editLineForm.fill(line.id,label,period,lineType)
-                      Ok(views.html.linedetail(line,NodeData.all.sortBy(_.label.toLowerCase()),form,addEdgeForm))
+                      Ok(views.html.provision.linedetail(line,NodeData.all.sortBy(_.label.toLowerCase()),form,addEdgeForm))
                   }.getOrElse(Redirect(routes.Provision.lines))
                   
               }
@@ -111,16 +154,16 @@ object Provision extends Controller {
         )
     }
   
-    def deleteLine(id: Long) = Action {
+    def deleteLine(id: Long) = withAuth { username => implicit request =>
         LineData.delete(id)
         Redirect(routes.Provision.lines)
     }
   
-    def lineDetail(id:Long) = Action {
+    def lineDetail(id:Long) = withAuth { username => implicit request =>
         LineData.findById(id).map{
           line =>
             val form = editLineForm.fill(line.id,line.label,line.period,line.lineType)
-            Ok(views.html.linedetail(line, NodeData.all.sortBy(_.label.toLowerCase()),form,addEdgeForm))          
+            Ok(views.html.provision.linedetail(line, NodeData.all.sortBy(_.label.toLowerCase()),form,addEdgeForm))          
         }.getOrElse(NotFound);    
     }
     
@@ -130,19 +173,19 @@ object Provision extends Controller {
     
 
     
-    def nodes = Action {
-        Ok(views.html.node(NodeData.all().sortBy(_.label.toLowerCase()), addNodeForm))
+    def nodes = withAuth { username => implicit request =>
+        Ok(views.html.provision.node(NodeData.all().sortBy(_.label.toLowerCase()), addNodeForm))
     }
     
-    def nodeDetail(id:Long) = Action {
+    def nodeDetail(id:Long) = withAuth { username => implicit request =>
       NodeData.findById(id).map{
-         node => Ok(views.html.nodedetail(node,LineData.findByNode(node.id), editNodeForm.fill(node.id,node.label,node.lat.toString,node.lng.toString)))          
+         node => Ok(views.html.provision.nodedetail(node,LineData.findByNode(node.id), editNodeForm.fill(node.id,node.label,node.lat.toString,node.lng.toString)))          
       }.getOrElse(NotFound);    
     }
     
-      def addNode = Action { implicit request =>
+      def addNode = withAuth { username => implicit request =>
       Provision.addNodeForm.bindFromRequest.fold(
-        errors => BadRequest(views.html.node(NodeData.all(), errors)),
+        errors => BadRequest(views.html.provision.node(NodeData.all(), errors)),
         {
           case(label,lat,lng)=>{              
               NodeData.create(label,lat.toDouble,lng.toDouble)
@@ -152,12 +195,12 @@ object Provision extends Controller {
       )
   }
       
-    def editNode = Action { implicit request =>
+    def editNode = withAuth { username => implicit request =>
       
       Provision.editNodeForm.bindFromRequest.fold(
           errors => {
                   NodeData.findById(errors.get._1.toLong).map{
-                      node => BadRequest(views.html.nodedetail(node, LineData.findByNode(node.id),errors))   
+                      node => BadRequest(views.html.provision.nodedetail(node, LineData.findByNode(node.id),errors))   
                   }getOrElse(Redirect(routes.Provision.nodes));
           },
           {
@@ -171,7 +214,7 @@ object Provision extends Controller {
       )
   }
   
-  def deleteNode(id: Long) = Action {
+  def deleteNode(id: Long) = withAuth { username => implicit request =>
       NodeData.delete(id)
       Redirect(routes.Provision.nodes)
   }
@@ -183,11 +226,11 @@ object Provision extends Controller {
   
 
     
-    def addEdge = Action { implicit request =>
+    def addEdge = withAuth { username => implicit request =>
         addEdgeForm.bindFromRequest.fold(            
             errors => {
                 LineData.findById(errors.data("line").toLong).map{
-                    line => BadRequest(views.html.linedetail(line, NodeData.all,Provision.editLineForm, errors))
+                    line => BadRequest(views.html.provision.linedetail(line, NodeData.all,Provision.editLineForm, errors))
                 }.getOrElse(NotFound)              
             },
             {
@@ -199,7 +242,7 @@ object Provision extends Controller {
        )
     }
     
-  def deleteEdge(id:Long) = Action {
+  def deleteEdge(id:Long)= withAuth { username => implicit request =>
       EdgeData.findById(id) match {
         case Some(lineEdge) =>  EdgeData.delete(id);Redirect(routes.Provision.lineDetail(lineEdge.line))
         case None =>  Redirect(routes.Provision.lines)
@@ -208,12 +251,12 @@ object Provision extends Controller {
      
   }
   
-  def editEdge = Action { implicit request =>
+  def editEdge = withAuth { username => implicit request =>
       
       editEdgeForm.bindFromRequest.fold(
           errors => {                
                   EdgeData.findById(errors.get._1.toLong).map{
-                      edge => BadRequest(views.html.edgedetail(edge, LineData.findById(edge.line).get,NodeData.findById(edge.sourceNode).get,NodeData.findById(edge.targetNode).get,errors))    
+                      edge => BadRequest(views.html.provision.edgedetail(edge, LineData.findById(edge.line).get,NodeData.findById(edge.sourceNode).get,NodeData.findById(edge.targetNode).get,errors))    
                   }getOrElse(Redirect(routes.Provision.lines));
           },
           {
@@ -229,16 +272,38 @@ object Provision extends Controller {
       )
   }
   
-     def edgeDetail(id:Long) = Action {
+     def edgeDetail(id:Long) = withAuth { username => implicit request =>
       EdgeData.findById(id).map{
          edge => 
             val line = LineData.findById(edge.line).get
             val source = NodeData.findById(edge.sourceNode).get
             val target = NodeData.findById(edge.targetNode).get
             val form = editEdgeForm.fill(edge.id,edge.distance,edge.duration)
-            Ok(views.html.edgedetail(edge,line,source,target, form))          
+            Ok(views.html.provision.edgedetail(edge,line,source,target, form))          
       }.getOrElse(NotFound);    
   }
   
 
+}
+
+trait Secured {
+  
+  /**
+   * Retrieve the connected user email.
+   */
+  private def username(request: RequestHeader) = request.session.get("admin")
+  
+  def withAuth(f: => String => Request[AnyContent] => Result) = {
+    Security.Authenticated(username, onUnauthorized) { user =>
+      Action(request => f(user)(request))
+    }
+  }
+
+  /**
+   * Redirect to login if the user in not authorized.
+   */
+  private def onUnauthorized(request: RequestHeader) = {
+    Logger.info("unauth");
+    Results.Redirect(routes.Provision.login)
+  }
 }

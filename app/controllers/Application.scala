@@ -10,7 +10,7 @@ import play.api.libs.json._
 object Application extends Controller {
   
   def index = Action {
-      Ok(views.html.index())
+      Ok(views.html.application.index())
   }
 
     def findNearestNode(lat:Double,lng:Double) = Action{ request =>
