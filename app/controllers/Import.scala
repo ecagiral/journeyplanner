@@ -17,11 +17,11 @@ object Import extends Controller{
         )
     )
     
-    def parseLinePage() = Action{
+    def parseLinePage() = Provision.withAuth { username => implicit request =>
       Ok(views.html.parseline(lineParserForm,List[NodeData]()))
     }
   
-  def parseLineData() = Action { implicit request =>
+  def parseLineData() = Provision.withAuth { username => implicit request =>
       lineParserForm.bindFromRequest.fold(
         errors => BadRequest(views.html.parseline(errors,List[NodeData]())),
         {

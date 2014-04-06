@@ -1,7 +1,7 @@
 @(nodes: List[NodeData], nodeForm: Form[(String,String,String)])
 @import helper._
 @main("Nodes") {
-    @header("")
+    @header("nodes")
     <span style="color:red">@nodeForm.errors.mkString("-")</span>
 	<div style="float:left;margin:20px;width:400px;height:400px" id="map-canvas"></div>
 	<div style="float:left;margin:20px;width:200px;">
