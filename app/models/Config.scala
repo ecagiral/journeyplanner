@@ -11,12 +11,12 @@ case class Config(confName:String,confValue:String) {
 
 object Config{
   
-  def getConfigParm(name:String):String = DB.withConnection { implicit c =>
-    SQL("select confValue from config where confName = {name} ").on('name->name).as(scalar[String].single)
+  def getConfigParm(name:String):Option[String] = DB.withConnection { implicit c =>
+    SQL("select confValue from config where confName = {name} ").on('name->name).as(scalar[String].singleOpt)
   }
   
   def getAdminPassword:String = {
-    getConfigParm("adminPass")
+    getConfigParm("adminPass").getOrElse("")
   }
   
 }
