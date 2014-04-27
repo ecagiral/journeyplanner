@@ -18,7 +18,7 @@ object RouteUtil {
     val allRoutes = iterateRoute(availableEdges,initialRoutes)
     val iterateduration:Long = System.currentTimeMillis();
     //Logger.info(allRoutes.size+" routes found")
-    //Logger.info("lines/iterate => "+(linesduration-start)+"/"+(iterateduration-linesduration)+" miliseconds");
+    Logger.info("lines/iterate => "+(linesduration-start)+"/"+(iterateduration-linesduration)+" miliseconds");
     allRoutes.groupBy(_.lines).map { case (line,route) => route.minBy(_.duration)}.toList
   }
   
