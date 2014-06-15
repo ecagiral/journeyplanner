@@ -25,6 +25,14 @@ object Application extends Controller {
         Ok(Json.toJson(resJsonArray))
     }
     
+    def findLines(nodeId:Long) = Action{ request =>   
+      val walkId = LineData.walk.id;
+      val resJsonArray:Seq[JsValue] = LineData.findByNode(nodeId).filterNot(_.id==walkId).map{
+        line => line.toJson          
+      }
+      Ok(Json.toJson(resJsonArray))
+    }
+    
     def findPath(fromLat:Double,fromLng:Double,toLat:Double,toLng:Double) = Action{ request =>
       val start:Long = System.currentTimeMillis();
       val routes = RouteUtil.solveRoute(fromLat, fromLng, toLat, toLng)  

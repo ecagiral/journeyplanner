@@ -13,6 +13,8 @@ import play.Play
 import play.Application
 import play.api.GlobalSettings
 import models.AnormImplicits.RichSQL
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
 
 case class LineData(id:Long,label:String,period:Int,lineType:Int){
     //line types
@@ -42,6 +44,12 @@ case class LineData(id:Long,label:String,period:Int,lineType:Int){
             ).executeUpdate()
         }
     }
+    
+    def toJson: JsValue = {
+       val edges:Seq[JsValue] = getEdgeData.map{_.toJson}
+       Json.obj("edges" -> edges,"label" -> label)
+    }
+
 }
 
 object LineData {

@@ -7,6 +7,8 @@ import play.api.Play.current
 import play.api.Logger
 import scala.util.Random
 import models.AnormImplicits.RichSQL
+import play.api.libs.json.Json
+import play.api.libs.json.JsValue
 
 case class NodeData(id:Long,label:String,lat:Double,lng:Double){
     
@@ -19,6 +21,10 @@ case class NodeData(id:Long,label:String,lat:Double,lng:Double){
                 'lng -> lng
             ).executeUpdate()
         }
+    }
+    
+    def toJson: JsValue = {
+       Json.obj("id" -> id,"lat" -> lat,"lng" -> lng, "label" -> label)
     }
 
 }
@@ -70,7 +76,7 @@ object NodeData {
                   val dist = (1000*Math.sqrt(Math.pow(rLat-node.lat,2)+Math.pow(rLng-node.lng,2))).toInt
                   if(dist>2){
                       Logger.warn("node "+label+" saved "+dist+" away");
-                      None
+                      Some(node.id)
                   }else{
                       Some(node.id)
                   }

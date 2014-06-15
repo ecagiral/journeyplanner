@@ -12,6 +12,10 @@ import play.api.mvc.Request
 import play.api.mvc.AnyContent
 import play.api.mvc.Result
 import play.api.mvc.Security
+import play.api.libs.json.Json
+import play.api.libs.json.JsNull
+import play.api.libs.ws.Response
+import play.api.libs.json.JsNumber
 
 object Provision extends Controller with Secured{
   
@@ -24,6 +28,10 @@ object Provision extends Controller with Secured{
       case (password) => password == Config.getAdminPassword
     })
   )
+  
+  def isAjax[A](implicit request : Request[A]) = {
+      request.headers.get("X-Requested-With") == Some("XMLHttpRequest")
+  }
 
   /**
    * Login page.
@@ -109,6 +117,14 @@ object Provision extends Controller with Secured{
           case (id,lab, lat,lng) => (lat.toDouble < 41.619481) && (lat.toDouble > 40.738656) && (lng.toDouble > 28.072815) && (lng.toDouble < 29.899292)
         })
     )
+    
+    ///////////////
+    //Index
+    ///////////////
+    
+    def index = withAuth { username => implicit request =>
+        Ok(views.html.provision.index(""))
+    }
 
     ///////////////
     //Lines
@@ -174,7 +190,19 @@ object Provision extends Controller with Secured{
 
     
     def nodes = withAuth { username => implicit request =>
-        Ok(views.html.provision.node(NodeData.all().sortBy(_.label.toLowerCase()), addNodeForm))
+        if(request.headers.get("X-Requested-With") == Some("XMLHttpRequest")){
+          val response = Json.arr(
+                  NodeData.all().sortBy(_.label.toLowerCase()).map(x => Json.obj(
+                  "name" -> x.label,
+                  "age" -> 31,
+                  "email" -> "bob@gmail.com"      
+                ))               
+          )
+           
+          Ok(response)
+        }else{
+          Ok(views.html.provision.node(NodeData.all().sortBy(_.label.toLowerCase()), addNodeForm))
+        }
     }
     
     def nodeDetail(id:Long) = withAuth { username => implicit request =>
@@ -184,12 +212,28 @@ object Provision extends Controller with Secured{
     }
     
       def addNode = withAuth { username => implicit request =>
+
       Provision.addNodeForm.bindFromRequest.fold(
-        errors => BadRequest(views.html.provision.node(NodeData.all(), errors)),
         {
-          case(label,lat,lng)=>{              
-              NodeData.create(label,lat.toDouble,lng.toDouble)
-              Redirect(routes.Provision.nodes)
+            errors => 
+              if(isAjax(request)){
+                  BadRequest("Bad Request: " + errors);
+              }else{
+                  Redirect(routes.Provision.nodes)
+              }
+              BadRequest(views.html.provision.node(NodeData.all(), errors))
+        },
+        {
+          case(label,lat,lng)=>{ 
+              val id:Long = NodeData.create(label,lat.toDouble,lng.toDouble).getOrElse(0)
+              if(isAjax(request)){
+                  NodeData.findById(id) match {
+                    case Some(node) => Ok(node.toJson)
+                    case None => BadRequest("Unable to add");
+                  }                                                       
+              }else{
+                  Redirect(routes.Provision.nodes)
+              }
           }
         }
       )
@@ -216,7 +260,11 @@ object Provision extends Controller with Secured{
   
   def deleteNode(id: Long) = withAuth { username => implicit request =>
       NodeData.delete(id)
-      Redirect(routes.Provision.nodes)
+      if(isAjax(request)){
+          Ok("");
+      }else{
+          Redirect(routes.Provision.nodes)
+      }
   }
   
   

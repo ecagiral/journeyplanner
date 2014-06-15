@@ -22,13 +22,18 @@ POST    /editEdge               	controllers.Provision.editEdge
 POST    /addEdge                	controllers.Provision.addEdge
 POST    /deleteEdge/:id/delete 		controllers.Provision.deleteEdge(id: Long)
 
+GET     /index               		controllers.Provision.index
+
 GET     /login               		controllers.Provision.login
 POST    /authenticate            	controllers.Provision.authenticate
 GET     /logout         		    controllers.Provision.logout
 
+GET     /index               		controllers.Provision.index
+
 GET 	/parse						controllers.Import.parseLinePage
 POST 	/parse						controllers.Import.parseLineData
 
+GET 	/findLines					controllers.Application.findLines(nodeId:Long)
 GET 	/findNearestNode			controllers.Application.findNearestNode(lat:Double,lng:Double)
 GET 	/findPath					controllers.Application.findPath(fromLat:Double,fromLng:Double,toLat:Double,toLng:Double)
 

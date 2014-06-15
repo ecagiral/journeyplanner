@@ -7,20 +7,26 @@ import play.api.Play.current
 import play.Logger
 import scala.util.Random
 import AnormImplicits._
+import play.api.libs.json.Json
+import play.api.libs.json.JsValue
 
 case class EdgeData(id:Long,line:Long,sourceNode:Long,targetNode:Long,distance:Integer,duration:Integer){
     
   def update(newDistance:Integer,newDuration:Integer){
-
-        DB.withConnection { implicit c =>
-            SQL("update edges set (distance,duration) = ({distance},{duration}) where id = {id}").on(
-                'id -> id,
-                'distance -> newDistance,
-                'duration -> newDuration
-            ).executeUpdate()
-        }
-        
-    }
+    DB.withConnection { implicit c =>
+        SQL("update edges set (distance,duration) = ({distance},{duration}) where id = {id}").on(
+            'id -> id,
+            'distance -> newDistance,
+            'duration -> newDuration
+        ).executeUpdate()
+    }        
+  }
+  
+  def toJson: JsValue = {
+       val source = NodeData.findById(sourceNode);
+       val target = NodeData.findById(targetNode);
+       Json.obj("source" -> source.get.toJson,"target"-> target.get.toJson)
+  }
 }
 
 object EdgeData {
