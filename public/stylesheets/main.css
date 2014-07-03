@@ -7,16 +7,10 @@
 	margin:10px;
 }
 
-.deletableObjectList li{
-	width:500px;
-	height:30px;
-}
-
-.deletableObjectList li form{
-	float:right;
+#edgeLineList{
 	display:none;
 }
 
-.deletableObjectList li:hover form{
-	display:inline;
+#nodeLineList{
+	display:none;
 }

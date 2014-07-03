@@ -15,7 +15,7 @@ object Application extends Controller {
 
     def findNearestNode(lat:Double,lng:Double) = Action{ request =>
       
-      val resJsonArray:Seq[JsValue] = NodeData.findNear(lat, lng,1500).map{
+      val resJsonArray:Seq[JsValue] = NodeData.findNear(lat, lng,3000).map{
         node => 
           NodeData.findById(node._1) match {
             case Some(nodeData) => Json.obj("id" -> nodeData.id,"lat" -> nodeData.lat,"lng" -> nodeData.lng, "label" -> node._2)
@@ -25,10 +25,31 @@ object Application extends Controller {
         Ok(Json.toJson(resJsonArray))
     }
     
-    def findLines(nodeId:Long) = Action{ request =>   
+    def findLines(nodeA:Long,nodeB:Option[Long]) = Action{ request =>
+      nodeB match {
+        case None =>{       
+          val walkId = LineData.walk.id;
+          val resJsonArray:Seq[JsValue] = LineData.findByNode(nodeA).filterNot(_.id==walkId).map{
+            line => line.toJson          
+          }
+          Ok(Json.toJson(resJsonArray))
+        }
+        case Some(nodeB) => {
+          val walkId = LineData.walk.id;
+          val resJsonArray:Seq[JsValue] = EdgeData.findByNode(nodeA, nodeB).filterNot(_.line==walkId).map{
+              edge => edge.toJson          
+          }
+          Ok(Json.toJson(resJsonArray))
+        }
+      }
+
+    }
+
+    
+    def findEdges(startNode:Long,endNode:Long) = Action{ request =>   
       val walkId = LineData.walk.id;
-      val resJsonArray:Seq[JsValue] = LineData.findByNode(nodeId).filterNot(_.id==walkId).map{
-        line => line.toJson          
+      val resJsonArray:Seq[JsValue] = EdgeData.findByNode(startNode, endNode).filterNot(_.line==walkId).map{
+        edge => edge.toJson          
       }
       Ok(Json.toJson(resJsonArray))
     }

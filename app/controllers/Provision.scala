@@ -123,7 +123,7 @@ object Provision extends Controller with Secured{
     ///////////////
     
     def index = withAuth { username => implicit request =>
-        Ok(views.html.provision.index(""))
+        Ok(views.html.provision.index(LineData.all().sortBy(_.label.toLowerCase())))
     }
 
     ///////////////
@@ -136,11 +136,22 @@ object Provision extends Controller with Secured{
   
     def addLine = withAuth { username => implicit request =>
         addLineForm.bindFromRequest.fold(
-            errors => BadRequest(views.html.provision.line(LineData.all().sortBy(_.label.toLowerCase()), errors)),
+            errors => {
+              if(isAjax(request)){
+                  BadRequest("Bad Request: " + errors);
+              }else{
+                  BadRequest(views.html.provision.line(LineData.all().sortBy(_.label.toLowerCase()), errors))
+              }
+            },
         {
           case(label,period,lineType)=>{              
               LineData.create(label,period,lineType)
-              Redirect(routes.Provision.lines)
+              if(isAjax(request)){
+                  Ok(label);
+              }else{
+                  Redirect(routes.Provision.lines) 
+              }
+              
           }
         }
       )
@@ -176,10 +187,15 @@ object Provision extends Controller with Secured{
     }
   
     def lineDetail(id:Long) = withAuth { username => implicit request =>
+      
         LineData.findById(id).map{
           line =>
-            val form = editLineForm.fill(line.id,line.label,line.period,line.lineType)
-            Ok(views.html.provision.linedetail(line, NodeData.all.sortBy(_.label.toLowerCase()),form,addEdgeForm))          
+            if(isAjax(request)){
+                Ok(line.toJson)
+            }else{
+                val form = editLineForm.fill(line.id,line.label,line.period,line.lineType)
+                Ok(views.html.provision.linedetail(line, NodeData.all.sortBy(_.label.toLowerCase()),form,addEdgeForm)) 
+            }
         }.getOrElse(NotFound);    
     }
     
@@ -190,19 +206,7 @@ object Provision extends Controller with Secured{
 
     
     def nodes = withAuth { username => implicit request =>
-        if(request.headers.get("X-Requested-With") == Some("XMLHttpRequest")){
-          val response = Json.arr(
-                  NodeData.all().sortBy(_.label.toLowerCase()).map(x => Json.obj(
-                  "name" -> x.label,
-                  "age" -> 31,
-                  "email" -> "bob@gmail.com"      
-                ))               
-          )
-           
-          Ok(response)
-        }else{
-          Ok(views.html.provision.node(NodeData.all().sortBy(_.label.toLowerCase()), addNodeForm))
-        }
+        Ok(views.html.provision.node(NodeData.all().sortBy(_.label.toLowerCase()), addNodeForm))       
     }
     
     def nodeDetail(id:Long) = withAuth { username => implicit request =>
@@ -277,14 +281,26 @@ object Provision extends Controller with Secured{
     def addEdge = withAuth { username => implicit request =>
         addEdgeForm.bindFromRequest.fold(            
             errors => {
+              if(isAjax(request)){
+                  Logger.error("hata"+errors.toString())
+                  BadRequest("Bad Request: " + errors)
+              }else{
                 LineData.findById(errors.data("line").toLong).map{
                     line => BadRequest(views.html.provision.linedetail(line, NodeData.all,Provision.editLineForm, errors))
-                }.getOrElse(NotFound)              
+                }.getOrElse(NotFound)    
+              }
             },
             {
               case(line,sourceEdge,targetEdge,distance,duration)=>{ 
                   EdgeData.create(line.toLong, sourceEdge.toLong,targetEdge.toLong,distance.toInt,duration.toInt)
-                  Redirect(routes.Provision.lineDetail(line.toLong))
+                  if(isAjax(request)){
+                    LineData.findById(line.toLong).map{
+                        lineData =>  Ok(lineData.label);
+                    }.getOrElse(BadRequest("Line not found"))  
+                     
+                  }else{
+                      Redirect(routes.Provision.lineDetail(line.toLong))
+                  }
               }
             }
        )
@@ -292,8 +308,22 @@ object Provision extends Controller with Secured{
     
   def deleteEdge(id:Long)= withAuth { username => implicit request =>
       EdgeData.findById(id) match {
-        case Some(lineEdge) =>  EdgeData.delete(id);Redirect(routes.Provision.lineDetail(lineEdge.line))
-        case None =>  Redirect(routes.Provision.lines)
+        case Some(lineEdge) =>  {
+          EdgeData.delete(id);
+          if(isAjax(request)){
+            Ok("")
+          }else{
+            Redirect(routes.Provision.lineDetail(lineEdge.line))    
+          }
+             
+        }
+        case None =>  {
+           if(isAjax(request)){
+            BadRequest("edge not found")
+          }else{
+              Redirect(routes.Provision.lines)
+          }
+        }
       }
      
      

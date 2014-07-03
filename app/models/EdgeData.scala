@@ -25,7 +25,8 @@ case class EdgeData(id:Long,line:Long,sourceNode:Long,targetNode:Long,distance:I
   def toJson: JsValue = {
        val source = NodeData.findById(sourceNode);
        val target = NodeData.findById(targetNode);
-       Json.obj("source" -> source.get.toJson,"target"-> target.get.toJson)
+       val lineData = LineData.findById(line);
+       Json.obj("id"->id,"source" -> source.get.toJson,"target"-> target.get.toJson,"lineLabel"->lineData.get.label)
   }
 }
 
@@ -61,6 +62,13 @@ object EdgeData {
     def findByLine(line_id:Long): List[EdgeData] = DB.withConnection { implicit c =>
         SQL("select * from edges where line = {line}").on(
             'line->line_id
+            ).as(edge *)
+    }
+    
+    def findByNode(startNode:Long,endNode:Long): List[EdgeData] = DB.withConnection { implicit c =>
+        SQL("select * from edges where sourceNode = {start} and targetNode = {end}").on(
+            'start->startNode,
+            'end->endNode
             ).as(edge *)
     }
     

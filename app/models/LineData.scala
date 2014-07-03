@@ -47,7 +47,7 @@ case class LineData(id:Long,label:String,period:Int,lineType:Int){
     
     def toJson: JsValue = {
        val edges:Seq[JsValue] = getEdgeData.map{_.toJson}
-       Json.obj("edges" -> edges,"label" -> label)
+       Json.obj("edges" -> edges,"label" -> label,"id"-> id)
     }
 
 }
