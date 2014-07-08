@@ -38,5 +38,7 @@ GET 	/findNearestNode			controllers.Application.findNearestNode(lat:Double,lng:D
 GET 	/findPath					controllers.Application.findPath(fromLat:Double,fromLng:Double,toLat:Double,toLng:Double)
 GET 	/findEdges					controllers.Application.findEdges(startNode:Long,endNode:Long)
 
+GET     /dummy						controllers.Provision.dummyResponse(id:Long)
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

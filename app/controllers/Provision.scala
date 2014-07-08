@@ -361,7 +361,10 @@ object Provision extends Controller with Secured{
       }.getOrElse(NotFound);    
   }
   
-
+     def dummyResponse(id:Long) = Action{ implicit request =>
+       val res = Json.obj("id" -> id,"name" -> "dummy","price" -> 1234567890l)
+       Ok(Json.toJson(res))       
+     }
 }
 
 trait Secured {
