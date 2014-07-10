@@ -362,7 +362,7 @@ object Provision extends Controller with Secured{
   }
   
      def dummyResponse(id:Long) = Action{ implicit request =>
-       val res = Json.obj("id" -> id,"name" -> "dummy","price" -> 1234567890l)
+       val res = Json.obj("id" -> id,"name" -> "dummy","price" -> 1234567890,"image"-> "http://www.ofix.com/UserFiles/Document/S12828_8b9_c60.jpg","url"->"http://www.ofix.com/Urunler/020922/Scrikss-F-108-Tukenmez-Kalem/S12828")
        Ok(Json.toJson(res))       
      }
 }
