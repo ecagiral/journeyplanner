@@ -47,7 +47,7 @@ case class LineData(id:Long,label:String,period:Int,lineType:Int){
     
     def toJson: JsValue = {
        val edges:Seq[JsValue] = getEdgeData.map{_.toJson}
-       Json.obj("edges" -> edges,"label" -> label,"id"-> id)
+       Json.obj("edges" -> edges,"label" -> label,"id"-> id,"type"->lineType,"period"->period)
     }
 
 }
@@ -80,6 +80,11 @@ object LineData {
 
     def delete(id: Long) {
         DB.withConnection { implicit c =>
+            //delete edges
+            SQL("delete from edges where line = {id}").on(
+                'id -> id
+            ).executeUpdate()
+            //delete lines
             SQL("delete from lines where id = {id}").on(
                 'id -> id
             ).executeUpdate()

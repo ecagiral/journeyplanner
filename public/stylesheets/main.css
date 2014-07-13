@@ -11,6 +11,14 @@
 	display:none;
 }
 
-#nodeLineList{
+#nodeLineList {
 	display:none;
+}
+
+.selectedItem{
+	color:red;
+}
+
+#editLineContainer{
+	display:none
 }

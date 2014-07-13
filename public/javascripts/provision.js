@@ -6,6 +6,7 @@ var startNode;
 var endNode;
 var tmpLine;
 var mapCenter;
+var mapStatus = "nodes";
 
 //Responsibilities of Provisioning.js
 // - Left click on empty map => Draw nodes inside the circle where center is click location
@@ -28,10 +29,12 @@ function initialize() {
 }
 
 function idleMap(){
-	if(mapCenter.lat() != map.getCenter().lat() || mapCenter.lng() != map.getCenter().lng() ){
-		mapCenter = map.getCenter();
-		clearEdges();
-		getNodes(mapCenter,drawNodes)	
+	if(mapStatus == "nodes"){
+		if(mapCenter.lat() != map.getCenter().lat() || mapCenter.lng() != map.getCenter().lng() ){
+			mapCenter = map.getCenter();
+			clearEdges();
+			getNodes(mapCenter,drawNodes)	
+		}
 	}
 }
 
@@ -139,6 +142,37 @@ function rightClickNode(nodeCursor){
 	}
 }
 
+function leftClickLine(lineElem){
+
+	var lineId = lineElem.data("line");
+	if(lineElem.hasClass("selectedItem")){
+		lineElem.removeClass("selectedItem");
+		$("#editLineContainer").hide();
+		$("#addLineContainer").show();
+		mapStatus = "nodes";
+		  mapCenter = map.getCenter();
+		  clearEdges();
+		  getNodes(mapCenter,drawNodes);	
+		return;
+	}
+	lineElem.siblings().removeClass("selectedItem");
+	getLine(lineId,function(line){
+		  lineElem.addClass("selectedItem");
+		  $("#editLineForm input[name='label']").val(line.label);
+		  $("#editLineForm input[name='period']").val(line.period);
+		  $("#editLineForm select[name='lineType']").val(line.type);
+		  $("#editLineForm input[name='delete']").data("line",line.id);
+		  $("#addLineContainer").hide();
+		  $("#editLineContainer").show();
+		  if(line.edges.length==0){
+			  alert("no edge found");
+			  return;
+		  }
+		  mapStatus = "line";
+		  drawEdges(line.edges);
+	})
+}
+
 function addNode(label,latLng){
 	var jqxhr = $.ajax( {
         type : 'POST',
@@ -199,15 +233,18 @@ function deleteNode(nodeId,callback){
 	  });
 }
 
-function drawNodes(data){
+function drawNodes(data,fitBound){
 
 		clearNodes();
-		nodeMarkers = {};
+		
+		var bounds = new google.maps.LatLngBounds();		
 		for (var i = 0; i < data.length; i++) {	
 			if(startNode && data[i].id == startNode.nodeId){
+				bounds.extend(startNode.getPosition());
 				continue;
 			}
 			if(endNode && data[i].id == endNode.nodeId){
+				bounds.extend(endNode.getPosition());
 				continue;
 			}
 			var marker = new google.maps.Marker({
@@ -217,6 +254,7 @@ function drawNodes(data){
 				nodeId:data[i].id,
 				icon:'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
 			});
+			bounds.extend(marker.getPosition());
 			google.maps.event.addListener(marker, 'click', function() {
 				leftClickNode(this);
 			});
@@ -225,16 +263,20 @@ function drawNodes(data){
 			});
 			nodeMarkers[marker.nodeId] = marker;
 		}
+		if(fitBound){
+			map.fitBounds(bounds);
+		}
 }
 
-function getLine(lineId){
+function getLine(lineId,callback){
+
 	  var jqxhr = $.ajax( {
 	        type : 'GET',
 	        contentType:'text/plain',
 	        url : '/linedetail/'+lineId
 	  })
 	  .done(function(data) {
-		  drawEdges(data.edges);
+		  callback(data);
 	  })
 	  .fail(function() {
 	    alert( "error" );
@@ -316,7 +358,6 @@ function drawEdges(data){
 		tmpLine.setMap(null);
 	}	
 	clearEdges();
-	edgeLines = [];
 	var nodes = [];
 	for (var i = 0; i < data.length; i++) {
 		var sourceAdded = false;
@@ -360,7 +401,7 @@ function drawEdges(data){
 		  });
 		  edgeLines.push(line);
 	}
-	drawNodes(nodes);
+	drawNodes(nodes,true);
 }
 
 function edgeAdded(){
@@ -400,7 +441,7 @@ function listNodeLines(lines,node){
 	$('#nodeLineList span').text(node.title);
 	$('#nodeLineList ul li').remove();
 	for (var i = 0; i < lines.length; i++) {
-		$('#nodeLineList ul').append('<li style="cursor:pointer" onclick ="getLine('+lines[i].id+')">'+lines[i].label+'</li>')
+		$('#nodeLineList ul').append('<li style="cursor:pointer" data-line="'+lines[i].id+'"><span onclick="leftClickLine($(this).parent())">'+lines[i].label+'</span></li>')
 	}
 	$('#nodeLineList').show();	
 }
@@ -432,6 +473,21 @@ function addLine(data){
 	});
 }
 
+function deleteLine(lineElem){
+	var lineId = $(lineElem).data("line");
+	var jqxhr = $.ajax( {
+        type : 'POST',
+        url : '/lines/'+lineId+'/delete',
+    }).done(function(data) {
+		$("#editLineContainer").hide();
+		$("#addLineContainer").show();
+		$("#allLineList ul").find("[data-line='" + lineId + "']").remove();
+	}).fail(function(data) {
+	    alert( "delete line error",data );
+	});
+}
+
+
 function addEdge(data){
 	console.log(data);
 	var jqxhr = $.ajax( {
@@ -461,11 +517,13 @@ function clearEdges(){
 	for (var i = 0; i < edgeLines.length; i++) {
 		edgeLines[i].setMap(null);
 	}
+	edgeLines = [];
 }
 function clearNodes(){
 	for (var m in nodeMarkers) {
 		nodeMarkers[m].setMap(null);
 	}
+	nodeMarkers = {};
 }
 
 $.fn.serializeObject = function()

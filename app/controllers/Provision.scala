@@ -46,7 +46,7 @@ object Provision extends Controller with Secured{
   def authenticate = Action { implicit request =>
     loginForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.provision.login(formWithErrors)),
-      user => Redirect(routes.Provision.lines).withSession("admin" -> "true")
+      user => Redirect(routes.Provision.index).withSession("admin" -> "true")
     )
   }
 
@@ -183,7 +183,11 @@ object Provision extends Controller with Secured{
   
     def deleteLine(id: Long) = withAuth { username => implicit request =>
         LineData.delete(id)
-        Redirect(routes.Provision.lines)
+        if(isAjax(request)){
+          Ok("");
+        }else{
+          Redirect(routes.Provision.lines)
+        }
     }
   
     def lineDetail(id:Long) = withAuth { username => implicit request =>

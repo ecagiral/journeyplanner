@@ -10,26 +10,44 @@
 				All lines
 			    <ul>
 			        @lines.map { line =>
-			            <li style="cursor:pointer" data-line="@line.id">
-			                @line.label
+			            <li data-line="@line.id" style="cursor:pointer" >
+			            	<span >@line.label</span>
 			            </li>
 			        }
 			    </ul>
-			    <h4>Add a new line</h4>
-			    <form action="" method="post" id="addLineForm">
-				    <input type='text' name="label" value="isim">
-				    <input type="text" name="period" value="0">
-				    <br/>
-				    <select name="lineType">
-					  <option value="1">otobus</option>
-					  <option value="2">minibus</option>
-					  <option value="3">vapur</option>
-					  <option value="4">metro</option>
-					  <option value="5">metrobus</option>
-					</select>
-					<br/>
-					<input type="submit" value="Add">
-				</form>
+				<div id="addLineContainer">
+				    <h4>Add a new line</h4>
+					<form action="" method="post" id="addLineForm">
+						<input type='text' name="label" value="isim"> <input
+							type="text" name="period" value="0"> <br /> <select
+							name="lineType">
+							<option value="1">otobus</option>
+							<option value="2">minibus</option>
+							<option value="3">vapur</option>
+							<option value="4">metro</option>
+							<option value="5">metrobus</option>
+						</select> <br /> <input type="submit" value="Add">
+					</form>
+				</div>
+				<div id="editLineContainer">
+					<h4>Edit line</h4>
+					<form action="" method="post" id="editLineForm">
+					    <input type='text' name="label" value="isim">
+					    <input type="text" name="period" value="0">
+					    <br/>
+					    <select name="lineType">
+						  <option value="1">otobus</option>
+						  <option value="2">minibus</option>
+						  <option value="3">vapur</option>
+						  <option value="4">metro</option>
+						  <option value="5">metrobus</option>
+						</select>
+						<br/>
+						<input type="submit" class ="btn btn-info" value="Edit">
+						<input type="button" class ="btn btn-danger" name="delete" data-line="-2" onclick ="deleteLine(this)" value="Delete">
+					</form>
+					
+				</div>
 			</div>
 			<div id="nodeLineList">
 				<span></span> lines
@@ -56,6 +74,7 @@
 				    <input type="hidden" name="targetNode" value="0">					   
 					<input type="submit" value="Add">
 				</form>
+
 			</div>
 		</div>
 	</div>
@@ -77,12 +96,9 @@
 	    });
 	    
 	    
-	    $("#allLineList ul li").on('click',function(event) {
-	    	getLine($(this).data("line"));
+	    $("#allLineList ul li span").on('click',function(event) {
+	    	leftClickLine($(this).parent());
 	    });
-	    
-	    $("#nodeLineList ul li").on('click',function(event) {
-	    	getLine($(this).data("line"));
-	    });
+
 	});	
 </script>
