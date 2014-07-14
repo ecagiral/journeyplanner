@@ -160,21 +160,37 @@ object Provision extends Controller with Secured{
     def editLine = withAuth { username => implicit request =>
         editLineForm.bindFromRequest.fold(
             errors => {
-              LineData.findById(errors.get._1).map{
-                line =>
-                    val form = editLineForm
-                    BadRequest(views.html.provision.linedetail(line, NodeData.all.sortBy(_.label.toLowerCase()), errors,addEdgeForm))
-              }.getOrElse(Redirect(routes.Provision.lines))
-              
+              if(isAjax(request)){
+                Logger.info("ilk bad")
+                  BadRequest("Bad Request: " + errors);
+              }else{
+                  LineData.findById(errors.get._1).map{
+                    line =>
+                        val form = editLineForm
+                        BadRequest(views.html.provision.linedetail(line, NodeData.all.sortBy(_.label.toLowerCase()), errors,addEdgeForm))
+                  }.getOrElse(Redirect(routes.Provision.lines))
+              }
             },
             {
               case(id,label,period,lineType)=>{              
                   LineData.findById(id).map{
                     line => 
                       line.update(label, period, lineType)
-                      val form = editLineForm.fill(line.id,label,period,lineType)
-                      Ok(views.html.provision.linedetail(line,NodeData.all.sortBy(_.label.toLowerCase()),form,addEdgeForm))
-                  }.getOrElse(Redirect(routes.Provision.lines))
+                      if(isAjax(request)){
+                        LineData.findById(id).map{
+                          newLine => Ok(newLine.toJson)
+                        }.getOrElse(BadRequest("Bad Request: no line found"))                                     
+                      }else{
+                        val form = editLineForm.fill(line.id,label,period,lineType)
+                        Ok(views.html.provision.linedetail(line,NodeData.all.sortBy(_.label.toLowerCase()),form,addEdgeForm))
+                      }
+                  }.getOrElse(
+                      if(isAjax(request)){
+                        BadRequest("Bad Request: no line found");
+                      }else{
+                        Redirect(routes.Provision.lines)
+                      }                   
+                  )
                   
               }
             }

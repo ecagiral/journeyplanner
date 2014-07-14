@@ -158,6 +158,7 @@ function leftClickLine(lineElem){
 	lineElem.siblings().removeClass("selectedItem");
 	getLine(lineId,function(line){
 		  lineElem.addClass("selectedItem");
+		  $("#editLineForm input[name='id']").val(line.id);
 		  $("#editLineForm input[name='label']").val(line.label);
 		  $("#editLineForm input[name='period']").val(line.period);
 		  $("#editLineForm select[name='lineType']").val(line.type);
@@ -461,13 +462,27 @@ function listEdgeLines(edges,nodeA,nodeB){
 }
 
 function addLine(data){
-	console.log(data);
+
 	var jqxhr = $.ajax( {
         type : 'POST',
         url : '/lines',
         data : data
     }).done(function(data) {
     	$('#allLineList ul').append('<li>'+data+'</li>')
+	}).fail(function(data) {
+	    alert( "add node error",data );
+	});
+}
+
+function editLine(data){
+
+	var jqxhr = $.ajax( {
+        type : 'POST',
+        url : '/editLine',
+        data : data
+    }).done(function(data) {
+    	console.log(data);
+    	$("#allLineList ul").find("[data-line='" + data.id + "'] > span").html(data.label);
 	}).fail(function(data) {
 	    alert( "add node error",data );
 	});
